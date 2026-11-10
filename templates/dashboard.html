@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Banner Selamat Datang -->
+<div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); border-radius: 15px; overflow: hidden;">
+    <div class="card-body p-4 p-md-5 text-white position-relative">
+        <div class="position-relative z-1">
+            <h4 class="fw-light mb-1">
+    <span class="fs-2">👋</span> 
+    <span id="sapaanWaktu">Selamat Datang</span>,
+</h4>
+<h1 class="fw-bold mb-3">{{ session.user_nama }}!</h1>
+
+<script>
+    (function() {
+        var jam = new Date().getHours();
+        var sapaan = 'Selamat Datang';
+        if (jam >= 4 && jam < 11) sapaan = 'Selamat Pagi';
+        else if (jam >= 11 && jam < 15) sapaan = 'Selamat Siang';
+        else if (jam >= 15 && jam < 18) sapaan = 'Selamat Sore';
+        else sapaan = 'Selamat Malam';
+        var el = document.getElementById('sapaanWaktu');
+        if (el) el.textContent = sapaan;
+    })();
+</script>
+            <p class="mb-1 opacity-75">Jangan hanya berharap, tapi kerjakan.</p>
+            <p class="mb-0 fw-semibold">Setiap tugas kecil adalah langkah menuju tujuan besar.</p>
+        </div>
+        <!-- Ornamen Background (Ilustrasi Gunung) -->
+        <div class="position-absolute bottom-0 end-0 opacity-25" style="width: 300px;">
+            <svg viewBox="0 0 500 150" xmlns="http://www.w3.org/2000/svg"><path d="M0,150 L100,50 L200,100 L300,20 L400,80 L500,0 L500,150 Z" fill="#ffffff"/></svg>
+        </div>
+    </div>
+</div>
+
+<!-- Statistik Cards -->
+<div class="row g-4 mb-4">
+    <!-- Total Task -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="background-color: #e0f2fe; border-radius: 15px;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                        <i class="bi bi-clipboard-check fs-5"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0 text-primary">Total Task</h6>
+                </div>
+                <h2 class="fw-bold mb-2 text-dark">{{ total }}</h2>
+                <p class="text-muted small mb-0">Semua tugas yang kamu miliki</p>
+            </div>
+        </div>
+    </div>
+    <!-- In Progress -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="background-color: #fef3c7; border-radius: 15px;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                        <i class="bi bi-clock-history fs-5"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0 text-warning-emphasis">In Progress</h6>
+                </div>
+                <h2 class="fw-bold mb-2 text-dark">{{ active }}</h2>
+                <p class="text-muted small mb-0">Tugas yang sedang dikerjakan</p>
+            </div>
+        </div>
+    </div>
+    <!-- Complete -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="background-color: #dcfce7; border-radius: 15px;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                        <i class="bi bi-check-circle fs-5"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0 text-success-emphasis">Complete</h6>
+                </div>
+                <h2 class="fw-bold mb-2 text-dark">{{ done }}</h2>
+                <p class="text-muted small mb-0">Tugas yang sudah selesai</p>
+            </div>
+        </div>
+    </div>
+    <!-- Jatuh Tempo -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="background-color: #fee2e2; border-radius: 15px;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                        <i class="bi bi-hourglass-split fs-5"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0 text-danger-emphasis">Jatuh Tempo</h6>
+                </div>
+                <h2 class="fw-bold mb-2 text-dark">{{ urgent }}</h2>
+                <p class="text-muted small mb-0">Tugas yang segera berakhir</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabel Tugas Terdekat -->
+<div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="fw-bold mb-1"><i class="bi bi-list-stars text-primary me-2"></i>Tugas Terdekat</h5>
+                <p class="text-muted small mb-0">Jangan lewatkan tugas pentingmu</p>
+            </div>
+            <a href="{{ url_for('tugas') }}" class="btn btn-light text-primary fw-semibold rounded-pill px-4">
+                <i class="bi bi-calendar3 me-1"></i> Lihat Semua <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        {% if recent_tasks %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="tugasTerdekatTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="border-0 rounded-start ps-3" width="5%"><input type="checkbox" class="form-check-input"></th>
+                        <th class="border-0">Nama Tugas</th>
+                        <th class="border-0">Project</th>
+                        <th class="border-0">Prioritas</th>
+                        <th class="border-0">Status</th>
+                        <th class="border-0">Due Date</th>
+                        <th class="border-0 rounded-end text-center" width="5%">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in recent_tasks %}
+                    <tr class="task-row" data-title="{{ task.title|lower }}">
+                        <td class="ps-3"><input type="checkbox" class="form-check-input"></td>
+                        <td class="fw-semibold">{{ task.title }}</td>
+                        <td class="text-muted">{{ task.category or '-' }}</td>
+                        <td>
+                            {% if task.priority == 'Tinggi' %}
+                                <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>Tinggi</span>
+                            {% elif task.priority == 'Rendah' %}
+                                <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>Rendah</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>Medium</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.completed %}
+                                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2"><i class="bi bi-check-circle me-1"></i>Complete</span>
+                            {% else %}
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"><i class="bi bi-clock me-1"></i>In Progress</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-danger fw-semibold">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            {{ task.deadline.strftime('%d %b %Y') if task.deadline else 'Tidak ada' }}
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="text-muted"><i class="bi bi-three-dots-vertical"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted mb-0">Belum ada tugas terdekat. <a href="{{ url_for('add_task') }}">Tambah tugas sekarang</a>.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const topbarSearch = document.getElementById('topbarSearch');
+    const table = document.getElementById('tugasTerdekatTable');
+    if (!topbarSearch || !table) return;
+
+    const rows = table.querySelectorAll('tbody tr.task-row');
+    const tbody = table.querySelector('tbody');
+
+    topbarSearch.addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const title = (row.dataset.title || '').toLowerCase();
+            if (title.includes(q)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Tampilkan pesan jika tidak ada hasil
+        let emptyRow = tbody.querySelector('.empty-search-row');
+        if (visibleCount === 0 && q !== '') {
+            if (!emptyRow) {
+                emptyRow = document.createElement('tr');
+                emptyRow.className = 'empty-search-row';
+                emptyRow.innerHTML = `<td colspan="7" class="text-center py-4 text-muted">
+                    <i class="bi bi-search fs-3 d-block mb-2"></i>Tidak ada tugas yang cocok dengan "${q}"
+                </td>`;
+                tbody.appendChild(emptyRow);
+            }
+        } else if (emptyRow) {
+            emptyRow.remove();
+        }
+    });
+});
+</script>
+{% endblock %}

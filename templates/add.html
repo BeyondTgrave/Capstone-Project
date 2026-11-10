@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Tambah Tugas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <i class="bi bi-plus-circle display-4 text-primary"></i>
+                    <h3 class="fw-bold mt-2">Tambah Tugas Baru</h3>
+                    <p class="text-muted">Isi detail tugas yang ingin Anda kerjakan.</p>
+                </div>
+                
+                <!-- PERHATIKAN: enctype="multipart/form-data" WAJIB ADA UNTUK UPLOAD FILE -->
+                <form method="POST" action="{{ url_for('add_task') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold">Judul Tugas <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required 
+                               placeholder="Contoh: Membuat laporan proposal">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Deskripsi (Opsional)</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Jelaskan detail tugas..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="priority" class="form-label fw-semibold">Prioritas <span class="text-danger">*</span></label>
+                            <select class="form-select" id="priority" name="priority" required>
+                                <option value="Tinggi">🔴 Tinggi</option>
+                                <option value="Sedang" selected>🟡 Sedang</option>
+                                <option value="Rendah">🟢 Rendah</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label fw-semibold">Kategori / Mata Kuliah</label>
+                            <input type="text" class="form-control" id="category" name="category" 
+                                   placeholder="Contoh: Program Web" list="categoryList">
+                            <datalist id="categoryList">
+                                <option value="Program Web">
+                                <option value="Keamanan Jaringan">
+                                <option value="Basis Data">
+                                <option value="Sistem Informasi Manajemen">
+                                <option value="Capstone Project">
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <!-- KELOMPOK & ANGGOTA -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="kelompok_id" class="form-label fw-semibold">Kelompok</label>
+                            <select class="form-select" id="kelompok_id" name="kelompok_id" onchange="updateAnggota()">
+                                <option value="">-- Tugas Pribadi --</option>
+                                {% for k in kelompok %}
+                                <option value="{{ k.id }}" data-anggota="{{ k.anggota | map(attribute='nim') | list | join(',') }}" data-nama="{{ k.anggota | map(attribute='nama') | list | join('|') }}">
+                                    {{ k.nama_kelompok }} - {{ k.mata_kuliah }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="assigned_to" class="form-label fw-semibold">Ditugaskan Ke</label>
+                            <select class="form-select" id="assigned_to" name="assigned_to">
+                                <option value="">-- Semua Anggota --</option>
+                            </select>
+                            <small class="text-muted">Pilih anggota penanggung jawab.</small>
+                        </div>
+                    </div>
+
+                    <!-- DEADLINE -->
+                    <div class="mb-4">
+                        <label for="deadline" class="form-label fw-semibold">Deadline <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="deadline" name="deadline" required>
+                    </div>
+
+                    <!-- UPLOAD LAMPIRAN (BARU) -->
+                    <div class="mb-4">
+                        <label for="lampiran" class="form-label fw-semibold">Lampiran Tugas (PDF/Word/Gambar)</label>
+                        <input class="form-control" type="file" id="lampiran" name="lampiran" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.zip,.rar">
+                        <small class="text-muted">Opsional. Unggah hasil pekerjaan Anda di sini.</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                            <i class="bi bi-save me-2"></i>Simpan Tugas
+                        </button>
+                        <a href="{{ url_for('tugas') }}" class="btn btn-light btn-lg rounded-pill">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateAnggota() {
+    var kelompokSelect = document.getElementById('kelompok_id');
+    var anggotaSelect = document.getElementById('assigned_to');
+    var selected = kelompokSelect.options[kelompokSelect.selectedIndex];
+    
+    // Reset opsi
+    anggotaSelect.innerHTML = '<option value="">-- Semua Anggota --</option>';
+    
+    var nims = selected.getAttribute('data-anggota');
+    var namas = selected.getAttribute('data-nama');
+    
+    if (nims && namas) {
+        var nimArr = nims.split(',');
+        var namaArr = namas.split('|');
+        for (var i = 0; i < nimArr.length; i++) {
+            if (nimArr[i].trim()) {
+                var opt = document.createElement('option');
+                opt.value = nimArr[i];
+                opt.textContent = namaArr[i] + ' (' + nimArr[i] + ')';
+                anggotaSelect.appendChild(opt);
+            }
+        }
+    }
+}
+</script>
+{% endblock %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ambil parameter dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const kId = urlParams.get('kelompok_id');
+    const aNim = urlParams.get('assigned_to');
+
+    const kelompokSelect = document.getElementById('kelompok_id');
+    const anggotaSelect = document.getElementById('assigned_to');
+
+    if (kId && kelompokSelect) {
+        // Set kelompok
+        kelompokSelect.value = kId;
+        // Trigger fungsi updateAnggota agar dropdown anggota terisi
+        updateAnggota();
+        
+        // Set anggota jika parameter ada
+        if (aNim && anggotaSelect) {
+            setTimeout(() => {
+                anggotaSelect.value = aNim;
+            }, 100); // Beri sedikit waktu untuk render dropdown
+        }
+    }
+});
+</script>

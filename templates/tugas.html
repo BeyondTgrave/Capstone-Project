@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Daftar Tugas{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-2">Daftar Tugas</h2>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-2">
+                <i class="bi bi-list-check me-1"></i>Total: <strong id="statTotal">0</strong>
+            </span>
+            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2">
+                <i class="bi bi-check-circle me-1"></i>Selesai: <strong id="statDone">0</strong>
+            </span>
+            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2">
+                <i class="bi bi-clock-history me-1"></i>Aktif: <strong id="statActive">0</strong>
+            </span>
+        </div>
+    </div>
+    <a href="{{ url_for('add_task') }}" class="btn btn-primary rounded-pill px-4">
+        <i class="bi bi-plus-lg me-1"></i> Tambah Tugas
+    </a>
+</div>
+
+<!-- Toolbar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari judul tugas...">
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <select id="sortSelect" class="form-select">
+                    <option value="created-desc">📅 Terbaru Dibuat</option>
+                    <option value="deadline-asc">⏰ Deadline Terdekat</option>
+                    <option value="priority-desc">🔥 Prioritas Tertinggi</option>
+                </select>
+            </div>
+            <div class="col-lg-5 col-md-12 d-flex justify-content-lg-end">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary active" id="btnGridView"><i class="bi bi-grid-3x3-gap-fill"></i> Grid</button>
+                    <button type="button" class="btn btn-outline-secondary" id="btnListView"><i class="bi bi-list-ul"></i> List</button>
+                </div>
+            </div>
+        </div>
+        <ul class="nav nav-pills mt-3 gap-2" id="filterTabs">
+            <li class="nav-item"><button type="button" class="nav-link active" data-filter="all">Semua</button></li>
+            <li class="nav-item"><button type="button" class="nav-link" data-filter="active">Aktif</button></li>
+            <li class="nav-item"><button type="button" class="nav-link" data-filter="done">Selesai</button></li>
+        </ul>
+    </div>
+</div>
+
+{% if tasks %}
+    <p class="text-muted small mb-3" id="resultInfo"></p>
+    <div id="gridView" class="row g-4">
+        {% for task in tasks %}
+        <div class="col-md-6 col-lg-4 task-item" 
+             data-title="{{ task.title|lower }}"
+             data-status="{% if task.completed %}done{% else %}active{% endif %}"
+             data-priority="{% if task.priority == 'Tinggi' %}3{% elif task.priority == 'Sedang' %}2{% else %}1{% endif %}"
+             data-created="{{ task.created_at.timestamp() }}"
+             data-deadline="{{ task.deadline.timestamp() if task.deadline else 0 }}">
+            
+            <div class="card h-100 border-0 shadow-sm task-card {% if task.completed %}bg-light task-done{% endif %} {% if task.priority == 'Tinggi' %}priority-tinggi{% elif task.priority == 'Rendah' %}priority-rendah{% else %}priority-sedang{% endif %}">
+                <div class="card-body position-relative d-flex flex-column">
+                    <div class="position-absolute top-0 start-0 h-100 rounded-start {% if task.completed %}bg-success{% elif task.priority == 'Tinggi' %}bg-danger{% elif task.priority == 'Rendah' %}bg-info{% else %}bg-warning{% endif %}" style="width: 5px;"></div>
+                    
+                    <!-- Tombol Edit & Hapus -->
+                    <div class="position-absolute top-0 end-0 p-2 d-flex gap-1">
+                        <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-light rounded-circle"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('delete_task', task_id=task.id) }}" class="btn btn-sm btn-light rounded-circle text-danger" onclick="return confirm('Hapus tugas ini?')"><i class="bi bi-trash3"></i></a>
+                    </div>
+                    
+                    <!-- Badge -->
+                    <div class="ps-3 mb-2 mt-1 d-flex flex-wrap gap-1" style="padding-right: 70px;">
+                        {% if task.priority == 'Tinggi' %}<span class="badge badge-priority bg-danger">Tinggi</span>
+                        {% elif task.priority == 'Rendah' %}<span class="badge badge-priority bg-info text-dark">Rendah</span>
+                        {% else %}<span class="badge badge-priority bg-warning text-dark">Sedang</span>{% endif %}
+                        {% if task.category %}<span class="badge badge-category">{{ task.category }}</span>{% endif %}
+                    </div>
+                    
+                    <!-- Judul -->
+                    <div class="ps-3 pe-5 mb-2">
+                        <h5 class="card-title fw-semibold mb-0 {% if task.completed %}text-decoration-line-through text-muted{% endif %}">{{ task.title }}</h5>
+                    </div>
+                    
+                    <!-- Info Anggota -->
+                    {% if task.assigned_to %}
+                    <div class="ps-3 mb-2">
+                        <small class="text-primary">
+                            <i class="bi bi-person-check-fill me-1"></i>Ditugaskan ke: <strong>{{ task.assigned_to }}</strong>
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Deskripsi -->
+                    {% if task.description %}
+                        <p class="card-text text-muted small ps-3 mb-2">{{ task.description }}</p>
+                    {% endif %}
+                    
+                    <!-- Deadline -->
+                    {% if task.deadline %}
+                    <div class="ps-3 mb-3">
+                        <small class="text-muted d-block mb-1"><i class="bi bi-calendar-x me-1"></i> {{ task.deadline.strftime('%d %b %Y, %H:%M') }}</small>
+                        <span class="badge bg-secondary countdown" data-deadline="{{ task.deadline.isoformat() }}">Menghitung...</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- ===== AREA UPLOAD & TOMBOL SELESAI (BARU) ===== -->
+                    <div class="ps-3 mt-auto border-top pt-3">
+                        {% if task.lampiran %}
+                        <div class="mb-2 d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('static', filename='uploads/' + task.lampiran) }}" target="_blank" class="text-primary small fw-semibold text-decoration-none text-truncate" style="max-width: 75%;">
+                                <i class="bi bi-paperclip"></i> Lampiran Tersedia
+                            </a>
+                            <span class="badge bg-success-subtle text-success" style="font-size: 0.65rem;">Selesai Upload</span>
+                        </div>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('upload_lampiran', task_id=task.id) }}" enctype="multipart/form-data" class="mb-2">
+                            <div class="input-group input-group-sm">
+                                <input type="file" class="form-control form-control-sm" name="file_lampiran" required accept=".pdf,.doc,.docx,.zip,.rar">
+                                <button class="btn btn-outline-primary" type="submit" title="Upload File"><i class="bi bi-upload"></i></button>
+                            </div>
+                        </form>
+                        {% endif %}
+
+                        {% if task.completed %}
+                        <a href="{{ url_for('toggle_task', task_id=task.id) }}" class="btn btn-warning btn-sm w-100 fw-semibold rounded-pill">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Tandai Belum Selesai
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('toggle_task', task_id=task.id) }}" class="btn btn-success btn-sm w-100 fw-semibold rounded-pill">
+                            <i class="bi bi-check-lg me-1"></i> Tandai Selesai
+                        </a>
+                        {% endif %}
+                    </div>
+                    <!-- ============================================= -->
+                    
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div id="emptyFilterMessage" class="text-center py-5 d-none">
+        <i class="bi bi-search display-1 text-muted"></i>
+        <h4 class="mt-3 text-muted">Tidak ada tugas yang cocok</h4>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-clipboard-x display-1 text-muted"></i>
+        <h4 class="mt-3 text-muted">Belum ada tugas</h4>
+        <a href="{{ url_for('add_task') }}" class="btn btn-primary rounded-pill px-4 mt-2">Tambah Tugas</a>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const filterTabs = document.querySelectorAll('#filterTabs .nav-link');
+    const gridView = document.getElementById('gridView');
+    const btnGridView = document.getElementById('btnGridView');
+    const btnListView = document.getElementById('btnListView');
+    const emptyMessage = document.getElementById('emptyFilterMessage');
+    const resultInfo = document.getElementById('resultInfo');
+    
+    if (!gridView) return;
+
+    const items = Array.from(document.querySelectorAll('.task-item'));
+    const statTotal = document.getElementById('statTotal');
+    const statDone = document.getElementById('statDone');
+    const statActive = document.getElementById('statActive');
+
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let currentSort = 'created-desc';
+
+    function calculateStats() {
+        let total = 0, done = 0, active = 0;
+        items.forEach(item => {
+            total++;
+            if (item.dataset.status === 'done') done++;
+            else active++;
+        });
+        if (statTotal) statTotal.textContent = total;
+        if (statDone) statDone.textContent = done;
+        if (statActive) statActive.textContent = active;
+    }
+
+    function applyFiltersAndSort() {
+        let visibleCount = 0;
+        let filteredItems = items.filter(item => {
+            const matchesFilter = 
+                currentFilter === 'all' ? true :
+                currentFilter === 'active' ? item.dataset.status === 'active' :
+                item.dataset.status === 'done';
+            
+            const matchesSearch = item.dataset.title.includes(currentSearch);
+            
+            if (matchesFilter && matchesSearch) {
+                item.style.display = '';
+                visibleCount++;
+                return true;
+            } else {
+                item.style.display = 'none';
+                return false;
+            }
+        });
+
+        const sortedItems = [...filteredItems].sort((a, b) => {
+            switch(currentSort) {
+                case 'created-desc': return parseFloat(b.dataset.created) - parseFloat(a.dataset.created);
+                case 'deadline-asc': {
+                    const aDl = parseFloat(a.dataset.deadline) || Infinity;
+                    const bDl = parseFloat(b.dataset.deadline) || Infinity;
+                    return aDl - bDl;
+                }
+                case 'priority-desc': return parseFloat(b.dataset.priority) - parseFloat(a.dataset.priority);
+                default: return 0;
+            }
+        });
+
+        sortedItems.forEach(item => gridView.appendChild(item));
+
+        if (resultInfo) resultInfo.textContent = `Menampilkan ${visibleCount} dari ${items.length} tugas`;
+        if (emptyMessage) {
+            if (visibleCount === 0) {
+                emptyMessage.classList.remove('d-none');
+                gridView.classList.add('d-none');
+            } else {
+                emptyMessage.classList.add('d-none');
+                gridView.classList.remove('d-none');
+            }
+        }
+    }
+
+    if (searchInput) searchInput.addEventListener('input', function() {
+        currentSearch = this.value.toLowerCase().trim();
+        applyFiltersAndSort();
+    });
+
+    if (sortSelect) sortSelect.addEventListener('change', function() {
+        currentSort = this.value;
+        applyFiltersAndSort();
+    });
+
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            applyFiltersAndSort();
+        });
+    });
+
+    if (btnGridView) btnGridView.addEventListener('click', function() {
+        btnGridView.classList.add('active');
+        if (btnListView) btnListView.classList.remove('active');
+        gridView.classList.remove('list-view-mode');
+        gridView.classList.add('row', 'g-4');
+    });
+    if (btnListView) btnListView.addEventListener('click', function() {
+        btnListView.classList.add('active');
+        if (btnGridView) btnGridView.classList.remove('active');
+        gridView.classList.remove('row', 'g-4');
+        gridView.classList.add('list-view-mode');
+    });
+
+    calculateStats();
+    applyFiltersAndSort();
+});
+</script>
+{% endblock %}

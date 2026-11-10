@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DoList.id</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        /* ================= RESET ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; overflow-x: hidden; }
+        img { max-width: 100%; display: block; }
+        a { text-decoration: none; }
+        button { font-family: inherit; cursor: pointer; }
+
+        /* ================= LAYOUT ================= */
+        .login-container { display: flex; min-height: 100vh; width: 100%; }
+
+        /* ================= KOLOM KIRI ================= */
+        .login-left {
+            flex: 0 0 50%;
+            background-image: url('/static/login-bg.jpg');
+            background-size: cover;
+            background-position: 75% center;
+            background-repeat: no-repeat;
+            color: #fff;
+            padding: 3rem 4rem;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.45) 50%, rgba(30, 58, 138, 0.15) 100%);
+            z-index: 0;
+        }
+        .login-left-content { position: relative; z-index: 1; max-width: 520px; }
+
+        /* ===== LOGO KIRI ATAS ===== */
+        .login-logo {
+            margin-bottom: 2.5rem;
+            display: inline-block;
+        }
+        .login-logo-img {
+            width: 150px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.4));
+        }
+
+        .login-tagline {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.35;
+            margin-bottom: 1.25rem;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        .login-desc {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+        .login-features { display: flex; flex-direction: column; gap: 1.25rem; }
+        .login-feature { display: flex; align-items: flex-start; gap: 16px; }
+        .login-feature-icon {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+        }
+        .login-feature h6 { font-size: 0.95rem; font-weight: 600; color: #fff; margin: 0 0 4px 0; }
+        .login-feature p { font-size: 0.82rem; color: rgba(255, 255, 255, 0.7); margin: 0; line-height: 1.5; }
+
+        /* ================= KOLOM KANAN ================= */
+        .login-right {
+            flex: 0 0 50%;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-right::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .login-form-wrapper { width: 100%; max-width: 420px; position: relative; z-index: 1; }
+
+        /* ===== LOGO DI FORM KANAN (di atas username) ===== */
+        .login-logo-inline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .login-logo-img-form {
+            width: 175px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .login-form-header { text-align: center; margin-bottom: 2rem; }
+        .login-form-header h2 { font-size: 1.35rem; font-weight: 700; color: #0f172a; margin: 0 0 8px 0; }
+        .login-form-header p { font-size: 0.9rem; color: #64748b; margin: 0; }
+        .login-error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid #dc2626;
+        }
+        .login-form { display: flex; flex-direction: column; gap: 1rem; }
+        .login-input {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 4px 16px;
+            transition: all 0.2s;
+        }
+        .login-input:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        .login-input-icon { color: #94a3b8; font-size: 1.05rem; margin-right: 12px; }
+        .login-input input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 14px 0;
+            font-size: 0.95rem;
+            background: transparent;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            min-width: 0;
+        }
+        .login-input input::placeholder { color: #94a3b8; }
+        .login-input-toggle {
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.05rem;
+            transition: color 0.2s;
+            padding: 8px;
+        }
+        .login-input-toggle:hover { color: #3b82f6; }
+        .login-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            margin-top: 8px;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(59, 130, 246, 0.4); }
+        .login-divider { display: flex; align-items: center; gap: 15px; margin: 1.5rem 0; }
+        .login-divider hr { flex: 1; border: none; border-top: 1px solid #e2e8f0; margin: 0; }
+        .login-divider span { color: #94a3b8; font-size: 0.85rem; }
+        .login-footer { text-align: center; font-size: 0.9rem; color: #64748b; margin: 0; }
+        .login-footer a { color: #3b82f6; font-weight: 600; }
+
+        /* ================= MOBILE ================= */
+        @media (max-width: 900px) {
+            .login-container { flex-direction: column; }
+            .login-left { display: none !important; }
+            .login-right { flex: 1 1 auto; padding: 2rem 1.5rem; min-height: 100vh; align-items: flex-start; }
+            .login-form-wrapper { margin-top: 2rem; }
+            .login-logo-inline { margin-bottom: 1.75rem; }
+            .login-logo-img-form { width: 150px; }
+            .login-form-header h2 { font-size: 1.2rem; }
+        }
+        @media (max-width: 500px) {
+            .login-right { padding: 1.5rem 1.25rem; }
+            .login-form-wrapper { margin-top: 1.5rem; }
+            .login-logo-img-form { width: 140px; }
+            .login-form-header { margin-bottom: 1.75rem; }
+            .login-form-header h2 { font-size: 1.1rem; margin-bottom: 6px; }
+            .login-form-header p { font-size: 0.85rem; }
+            .login-input input { padding: 12px 0; font-size: 0.9rem; }
+            .login-btn { padding: 14px; font-size: 0.95rem; }
+            .login-footer { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+
+    <!-- ================= KOLOM KIRI ================= -->
+    <div class="login-left">
+        <div class="login-left-content">
+
+            <!-- Logo besar di kiri atas (150px) -->
+            <div class="login-logo">
+                <img src="{{ url_for('static', filename='logo-dolist.png') }}" alt="DoList" class="login-logo-img">
+            </div>
+
+            <h1 class="login-tagline">Kelola Tugas, Capai Target,<br>Raih Masa Depan.</h1>
+            <p class="login-desc">DoList membantumu mencatat tugas dan proyek perkuliahan, mengatur deadline, serta memberikan pengingat agar kamu tidak pernah melewatkan hal penting.</p>
+            <div class="login-features">
+                <div class="login-feature">
+                    <div class="login-feature-icon" style="background: #3b82f6;"><i class="bi bi-calendar3"></i></div>
+                    <div>
+                        <h6>Kelola Tugas & Proyek</h6>
+                        <p>Simpan semua tugas dan proyek kuliah dalam satu tempat.</p>
+                    </div>
+                </div>
+                <div class="login-feature">
+                    <div class="login-feature-icon" style="background: #10b981;"><i class="bi bi-bell-fill"></i></div>
+                    <div>
+                        <h6>Pengingat Deadline</h6>
+                        <p>Dapatkan notifikasi sebelum tenggat waktu berakhir.</p>
+                    </div>
+                </div>
+                <div class="login-feature">
+                    <div class="login-feature-icon" style="background: #8b5cf6;"><i class="bi bi-tag-fill"></i></div>
+                    <div>
+                        <h6>Kategori & Prioritas</h6>
+                        <p>Tandai tugas berdasarkan kategori dan tingkat kepentingannya.</p>
+                    </div>
+                </div>
+                <div class="login-feature">
+                    <div class="login-feature-icon" style="background: #f59e0b;"><i class="bi bi-bar-chart-fill"></i></div>
+                    <div>
+                        <h6>Dashboard Ringkas</h6>
+                        <p>Lihat progres tugas dan proyek kamu dalam satu tampilan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= KOLOM KANAN ================= -->
+    <div class="login-right">
+        <div class="login-form-wrapper">
+
+            <!-- Logo di atas username (175px) -->
+            <div class="login-logo-inline">
+                <img src="{{ url_for('static', filename='logo-dolist.png') }}" alt="DoList" class="login-logo-img-form">
+            </div>
+
+            <div class="login-form-header">
+                <h2>Selamat datang kembali!</h2>
+                <p>Masuk untuk melanjutkan ke akun DoList kamu.</p>
+            </div>
+
+            {% if error %}
+            <div class="login-error">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('login') }}" class="login-form">
+                <div class="login-input">
+                    <i class="bi bi-person-fill login-input-icon"></i>
+                    <input type="text" name="username" placeholder="Username" required autofocus
+                           value="{{ request.form.get('username', '') }}">
+                </div>
+                <div class="login-input">
+                    <i class="bi bi-lock-fill login-input-icon"></i>
+                    <input type="password" name="password" id="passwordInput" placeholder="Password" required>
+                    <i class="bi bi-eye-slash login-input-toggle" id="toggleIcon" onclick="togglePassword()"></i>
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="bi bi-arrow-right"></i>
+                    <span>Masuk</span>
+                </button>
+            </form>
+
+            <div class="login-divider">
+                <hr><span>atau</span><hr>
+            </div>
+
+            <p class="login-footer">
+                Belum punya akun? <a href="#">Daftar di sini</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePassword() {
+        var input = document.getElementById('passwordInput');
+        var icon = document.getElementById('toggleIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        }
+    }
+</script>
+
+</body>
+</html>

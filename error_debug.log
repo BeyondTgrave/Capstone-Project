@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/dolistwe/dolist2/app.py", line 180, in add_task
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+  File "/home/dolistwe/virtualenv/dolist2/3.11/lib/python3.11/site-packages/werkzeug/datastructures/file_storage.py", line 129, in save
+    dst = open(dst, "wb")
+          ^^^^^^^^^^^^^^^
+NotADirectoryError: [Errno 20] Not a directory: '/home/dolistwe/dolist2/static/uploads/1794138526_DUMMY.pdf'

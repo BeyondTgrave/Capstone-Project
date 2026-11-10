@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}Kelompok{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h3 class="fw-bold mb-1">Kelompok saya</h3>
+        <p class="text-muted small mb-0">Semua Kelompok yang Kamu Ikuti</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalTambahKelompok">
+        <i class="bi bi-plus-lg me-1"></i> Buat Kelompok Baru
+    </button>
+</div>
+
+{% if kelompok %}
+<div class="row g-4">
+    {% for k in kelompok %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 h-100 kelompok-card" style="border-radius: 16px; background: #f1f3f5; position: relative; cursor: pointer;">
+            <a href="{{ url_for('kelompok_detail', kelompok_id=k.id) }}" class="text-decoration-none text-dark stretched-link-detail">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">{{ k.nama_kelompok }}</h5>
+                    <p class="text-muted small mb-3">{{ k.anggota|length }} Anggota. Aktif</p>
+                    <div class="d-flex align-items-center mb-4" style="margin-left: -6px;">
+                        {% for a in k.anggota[:3] %}
+                        <div class="avatar-circle" title="{{ a.nama }} ({{ a.nim }})"><i class="bi bi-person-fill"></i></div>
+                        {% endfor %}
+                        {% if k.anggota|length > 3 %}<div class="avatar-circle avatar-more">+{{ k.anggota|length - 3 }}</div>{% endif %}
+                    </div>
+                    {% set total, done, progress = k.get_progress() %}
+                    <div class="progress mb-2" style="height: 6px; background: #dee2e6; border-radius: 10px;">
+                        <div class="progress-bar {% if progress == 100 %}bg-success{% else %}bg-dark{% endif %}" style="width: {{ progress }}%; border-radius: 10px;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" style="font-size: 0.75rem;">{% if total > 0 %}{{ progress }}% Selesai ({{ done }}/{{ total }}){% else %}Belum ada tugas{% endif %}</small>
+                        <small class="text-muted" style="font-size: 0.75rem;">Due to {{ k.created_at.strftime('%d %b %Y') }}</small>
+                    </div>
+                </div>
+            </a>
+            <a href="{{ url_for('delete_kelompok', kelompok_id=k.id) }}" class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-3 text-danger" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; z-index: 2;" onclick="return confirm('Hapus kelompok ini?')">
+                <i class="bi bi-trash3"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 h-100 kelompok-card-add" style="border-radius: 16px; background: #f1f3f5; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalTambahKelompok">
+            <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 180px;">
+                <i class="bi bi-plus-lg" style="font-size: 1.5rem; color: #6c757d;"></i>
+                <p class="mb-0 mt-2 fw-semibold text-dark">Buat Kelompok Baru</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 h-100 kelompok-card-add" style="border-radius: 16px; background: #f1f3f5; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalTambahKelompok">
+            <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 180px;">
+                <i class="bi bi-plus-lg" style="font-size: 1.5rem; color: #6c757d;"></i>
+                <p class="mb-0 mt-2 fw-semibold text-dark">Buat Kelompok Baru</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- MODAL TAMBAH KELOMPOK -->
+<div class="modal fade" id="modalTambahKelompok" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow" style="border-radius: 15px; overflow: hidden;">
+            <form method="POST" action="{{ url_for('add_kelompok') }}" id="formKelompok">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-people-fill me-2"></i>Buat Kelompok Baru</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label fw-semibold">Mata Kuliah <span class="text-danger">*</span></label>
+                            <select class="form-select" name="mata_kuliah" required>
+                                <option value="" selected disabled>Pilih Mata Kuliah...</option>
+                                <option value="Capstone Project (STSI4440)">Capstone Project (STSI4440)</option>
+                                <option value="Program Web">Program Web</option>
+                                <option value="Keamanan Jaringan">Keamanan Jaringan</option>
+                                <option value="Basis Data">Basis Data</option>
+                                <option value="Sistem Informasi Manajemen">Sistem Informasi Manajemen</option>
+                                <option value="Pemrograman">Pemrograman</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nama Kelompok <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="nama_kelompok" placeholder="Contoh: Kelompok A" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-person-plus-fill text-primary me-2"></i>Anggota Kelompok
+                        </label>
+                        
+                        <!-- Search Box -->
+                        <div class="position-relative">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" id="searchAnggota" class="form-control border-start-0" 
+                                       placeholder="Ketik nama atau NIM..." autocomplete="off">
+                            </div>
+                            <!-- Dropdown hasil search -->
+                            <div id="hasilSearch" class="list-group position-absolute w-100 shadow" 
+                                 style="z-index: 1000; max-height: 240px; overflow-y: auto; display: none; border-radius: 10px; margin-top: 4px;">
+                            </div>
+                        </div>
+                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Gunakan pencarian untuk memilih anggota yang terdaftar.</small>
+                    </div>
+
+                    <!-- Chip anggota terpilih -->
+                    <div id="chipContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                    <!-- Hidden inputs untuk submit -->
+                    <div id="hiddenInputs"></div>
+
+                    <div class="alert alert-info border-0 mt-3 mb-0" style="border-radius: 10px; font-size: 0.85rem;">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Anda akan otomatis menjadi anggota kelompok ini.</strong>
+    <br>
+    <i class="bi bi-bell me-1"></i>Anggota lain yang ditambahkan akan menerima notifikasi.
+</div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-save me-1"></i>Simpan Kelompok
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var searchInput = document.getElementById('searchAnggota');
+    var hasilSearch = document.getElementById('hasilSearch');
+    var chipContainer = document.getElementById('chipContainer');
+    var hiddenInputs = document.getElementById('hiddenInputs');
+    var form = document.getElementById('formKelompok');
+    
+    if (!searchInput) return;
+    
+    var selectedUsers = [];  // {nim, nama}
+    var debounceTimer = null;
+    
+    // Clear saat modal dibuka
+    document.getElementById('modalTambahKelompok').addEventListener('show.bs.modal', function() {
+        searchInput.value = '';
+        hasilSearch.style.display = 'none';
+        chipContainer.innerHTML = '';
+        hiddenInputs.innerHTML = '';
+        selectedUsers = [];
+    });
+    
+    // Search
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        var q = this.value.trim();
+        if (q.length < 1) {
+            hasilSearch.style.display = 'none';
+            return;
+        }
+        debounceTimer = setTimeout(function() {
+            fetch('/api/users?q=' + encodeURIComponent(q))
+                .then(function(r) { return r.json(); })
+                .then(function(users) {
+                    renderHasil(users);
+                });
+        }, 200);
+    });
+    
+    function renderHasil(users) {
+        if (!users.length) {
+            hasilSearch.innerHTML = '<div class="list-group-item text-muted small text-center">Tidak ada hasil</div>';
+            hasilSearch.style.display = 'block';
+            return;
+        }
+        var html = '';
+        users.forEach(function(u) {
+            var sudahDipilih = selectedUsers.some(function(x) { return x.nim === u.nim; });
+            html += '<button type="button" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between" ' +
+                    'onclick="window.__tambahAnggota(\'' + u.nim + '\', \'' + u.nama.replace(/'/g, "\\'") + '\')" ' +
+                    (sudahDipilih ? 'disabled' : '') + '>' +
+                    '<div class="d-flex align-items-center">' +
+                        '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">' +
+                            '<i class="bi bi-person-fill"></i>' +
+                        '</div>' +
+                        '<div class="text-start">' +
+                            '<div class="fw-semibold small">' + u.nama + '</div>' +
+                            '<div class="text-muted" style="font-size: 0.75rem;">' + u.nim + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<span class="badge ' + (sudahDipilih ? 'bg-secondary' : 'bg-primary') + ' rounded-pill">' +
+                        (sudahDipilih ? 'Terpilih' : 'Tambah') +
+                    '</span>' +
+                '</button>';
+        });
+        hasilSearch.innerHTML = html;
+        hasilSearch.style.display = 'block';
+    }
+    
+    window.__tambahAnggota = function(nim, nama) {
+        if (selectedUsers.some(function(x) { return x.nim === nim; })) return;
+        selectedUsers.push({nim: nim, nama: nama});
+        renderChips();
+        searchInput.value = '';
+        hasilSearch.style.display = 'none';
+    };
+    
+        function renderChips() {
+        chipContainer.innerHTML = '';
+        hiddenInputs.innerHTML = '';
+        
+        if (selectedUsers.length === 0) {
+            chipContainer.innerHTML = '<small class="text-muted fst-italic">Belum ada anggota. Tambahkan dari pencarian di atas.</small>';
+            return;
+        }
+        
+        selectedUsers.forEach(function(u, idx) {
+            var card = document.createElement('div');
+            card.className = 'border rounded p-3 mb-2 bg-white';
+            card.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="fw-semibold text-dark">
+                        <i class="bi bi-person-circle text-primary me-1"></i> ${u.nama} <span class="text-muted small">(${u.nim})</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light text-danger rounded-circle" onclick="hapusAnggota(${idx})">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>
+                <input type="hidden" name="anggota_nim[]" value="${u.nim}">
+                <input type="text" name="tugas_awal[]" class="form-control form-control-sm" placeholder="Tugas untuk ${u.nama}..." required>
+            `;
+            chipContainer.appendChild(card);
+        });
+    }
+    
+    window.hapusAnggota = function(idx) {
+        selectedUsers.splice(idx, 1);
+        renderChips();
+    };
+    
+    // Close dropdown saat klik di luar
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !hasilSearch.contains(e.target)) {
+            hasilSearch.style.display = 'none';
+        }
+    });
+    
+    // Validasi form
+    form.addEventListener('submit', function(e) {
+        if (selectedUsers.length === 0) {
+            e.preventDefault();
+            alert('Tambahkan minimal 1 anggota kelompok!');
+        }
+    });
+})();
+</script>
+{% endblock %}

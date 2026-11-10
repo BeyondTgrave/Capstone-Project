@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Tugas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <i class="bi bi-pencil-square display-4 text-warning"></i>
+                    <h3 class="fw-bold mt-2">Edit Tugas</h3>
+                    <p class="text-muted">Perbarui detail tugas sesuai kebutuhan.</p>
+                </div>
+                
+                <!-- PERHATIKAN: enctype="multipart/form-data" WAJIB ADA UNTUK UPLOAD FILE -->
+                <form method="POST" action="{{ url_for('edit_task', task_id=task.id) }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold">Judul Tugas <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required 
+                               value="{{ task.title }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Deskripsi (Opsional)</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Jelaskan detail tugas...">{{ task.description or '' }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="priority" class="form-label fw-semibold">Prioritas <span class="text-danger">*</span></label>
+                            <select class="form-select" id="priority" name="priority" required>
+                                <option value="Tinggi" {% if task.priority == 'Tinggi' %}selected{% endif %}>🔴 Tinggi</option>
+                                <option value="Sedang" {% if task.priority == 'Sedang' %}selected{% endif %}>🟡 Sedang</option>
+                                <option value="Rendah" {% if task.priority == 'Rendah' %}selected{% endif %}>🟢 Rendah</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label fw-semibold">Kategori / Mata Kuliah</label>
+                            <input type="text" class="form-control" id="category" name="category" 
+                                   value="{{ task.category or '' }}" placeholder="Contoh: Program Web">
+                        </div>
+                    </div>
+
+                    <!-- KELOMPOK & ANGGOTA -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="kelompok_id" class="form-label fw-semibold">Kelompok</label>
+                            <select class="form-select" id="kelompok_id" name="kelompok_id" onchange="updateAnggota(true)">
+                                <option value="">-- Tugas Pribadi --</option>
+                                {% for k in kelompok %}
+                                <option value="{{ k.id }}" 
+                                        data-anggota="{{ k.anggota | map(attribute='nim') | list | join(',') }}" 
+                                        data-nama="{{ k.anggota | map(attribute='nama') | list | join('|') }}"
+                                        {% if task.kelompok_id == k.id %}selected{% endif %}>
+                                    {{ k.nama_kelompok }} - {{ k.mata_kuliah }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="assigned_to" class="form-label fw-semibold">Ditugaskan Ke</label>
+                            <select class="form-select" id="assigned_to" name="assigned_to">
+                                <option value="">-- Semua Anggota --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- DEADLINE -->
+                    <div class="mb-4">
+                        <label for="deadline" class="form-label fw-semibold">Deadline <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="deadline" name="deadline" required
+                               value="{{ task.deadline.strftime('%Y-%m-%dT%H:%M') if task.deadline else '' }}">
+                    </div>
+                    
+                    <!-- UPLOAD LAMPIRAN (BARU) -->
+                    <div class="mb-4">
+                        <label for="lampiran" class="form-label fw-semibold">Lampiran Tugas (PDF/Word/Gambar)</label>
+                        <input class="form-control" type="file" id="lampiran" name="lampiran" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.zip,.rar">
+                        
+                        {% if task.lampiran %}
+                        <div class="mt-2 small">
+                            <i class="bi bi-paperclip"></i> File saat ini: 
+                            <a href="{{ url_for('static', filename='uploads/' + task.lampiran) }}" target="_blank" class="fw-semibold text-decoration-none">
+                                Lihat Lampiran
+                            </a>
+                            <span class="text-muted">(Unggah file baru untuk mengganti)</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg rounded-pill text-white">
+                            <i class="bi bi-save me-2"></i>Simpan Perubahan
+                        </button>
+                        <a href="{{ url_for('tugas') }}" class="btn btn-light btn-lg rounded-pill">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var currentAssigned = "{{ task.assigned_to or '' }}";
+
+function updateAnggota(preserve) {
+    var kelompokSelect = document.getElementById('kelompok_id');
+    var anggotaSelect = document.getElementById('assigned_to');
+    var selected = kelompokSelect.options[kelompokSelect.selectedIndex];
+    
+    anggotaSelect.innerHTML = '<option value="">-- Semua Anggota --</option>';
+    
+    var nims = selected.getAttribute('data-anggota');
+    var namas = selected.getAttribute('data-nama');
+    
+    if (nims && namas) {
+        var nimArr = nims.split(',');
+        var namaArr = namas.split('|');
+        for (var i = 0; i < nimArr.length; i++) {
+            if (nimArr[i].trim()) {
+                var opt = document.createElement('option');
+                opt.value = nimArr[i];
+                opt.textContent = namaArr[i] + ' (' + nimArr[i] + ')';
+                if (preserve && currentAssigned === nimArr[i]) {
+                    opt.selected = true;
+                }
+                anggotaSelect.appendChild(opt);
+            }
+        }
+    }
+}
+
+// Jalankan saat halaman dimuat (untuk pre-select)
+document.addEventListener('DOMContentLoaded', function() {
+    updateAnggota(true);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Kalender{% endblock %}
+
+{% block content %}
+
+<!-- Banner -->
+<div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); border-radius: 15px;">
+    <div class="card-body p-4 p-md-5">
+        <h3 class="fw-bold text-dark mb-2">
+            <i class="bi bi-calendar2-week-fill text-primary me-2"></i>Kalender Akademik
+        </h3>
+        <p class="text-muted mb-0">Lihat jadwal tugas, proyek, dan deadline kamu dalam satu tempat.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" id="btnPrev"><i class="bi bi-chevron-left"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnNext"><i class="bi bi-chevron-right"></i></button>
+                        <button class="btn btn-outline-primary btn-sm ms-2" id="btnToday">Today</button>
+                    </div>
+                    <div class="btn-group view-toggle">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" id="btnMonth">Month</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnWeek">Week</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnDay">Day</button>
+                    </div>
+                </div>
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-calendar-event text-primary me-2"></i>Agenda Terdekat</h6>
+                {% if upcoming %}
+                    {% for task in upcoming %}
+                    <a href="{{ url_for('edit_task', task_id=task.id) }}" class="text-decoration-none">
+                        <div class="d-flex align-items-start gap-3 mb-3 p-2 rounded">
+                            <div class="date-box text-center rounded p-2 bg-primary-subtle text-primary" style="min-width: 55px;">
+                                <div class="fw-bold fs-5">{{ task.deadline.strftime('%d') }}</div>
+                                <div class="small text-uppercase" style="font-size: 0.7rem;">{{ task.deadline.strftime('%b') }}</div>
+                            </div>
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <p class="mb-1 fw-semibold text-dark small text-truncate">{{ task.title }}</p>
+                                <p class="mb-1 text-muted" style="font-size: 0.75rem;">{{ task.deadline.strftime('%H:%M') }}</p>
+                                <span class="badge rounded-pill bg-primary-subtle text-primary" style="font-size: 0.65rem;">{{ task.category or 'Tugas' }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-calendar-x fs-1 text-muted opacity-50"></i>
+                        <p class="text-muted small mt-2 mb-0">Tidak ada agenda terdekat</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- FullCalendar via CDN alternatif -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    if (!calendarEl) { console.error('Element #calendar tidak ditemukan'); return; }
+
+    // Tunggu sampai FullCalendar benar-benar ter-load
+    function initCalendar() {
+        if (typeof FullCalendar === 'undefined') {
+            console.log('Menunggu FullCalendar...');
+            setTimeout(initCalendar, 200);
+            return;
+        }
+        console.log('FullCalendar v' + FullCalendar.version + ' siap');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            locale: 'id',
+            firstDay: 1,
+            headerToolbar: false,
+            dayMaxEvents: 3,
+            displayEventTime: true,
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            },
+            events: function(info, successCallback, failureCallback) {
+                console.log('Fetching events dari /api/tasks ...');
+                fetch('/api/tasks')
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        console.log('Berhasil load ' + data.length + ' event:', data);
+                        successCallback(data);
+                    })
+                    .catch(function(err) {
+                        console.error('Gagal load events:', err);
+                        failureCallback(err);
+                    });
+            },
+            eventClick: function(info) {
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                    info.jsEvent.preventDefault();
+                }
+            },
+            eventDidMount: function(info) {
+                // Tooltip saat hover
+                info.el.setAttribute('title', info.event.title);
+            }
+        });
+        calendar.render();
+
+        var btnPrev = document.getElementById('btnPrev');
+        var btnNext = document.getElementById('btnNext');
+        var btnToday = document.getElementById('btnToday');
+        if (btnPrev) btnPrev.addEventListener('click', function() { calendar.prev(); });
+        if (btnNext) btnNext.addEventListener('click', function() { calendar.next(); });
+        if (btnToday) btnToday.addEventListener('click', function() { calendar.today(); });
+
+        function setActiveView(btn) {
+            document.querySelectorAll('.view-toggle .btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+        }
+        var btnMonth = document.getElementById('btnMonth');
+        var btnWeek = document.getElementById('btnWeek');
+        var btnDay = document.getElementById('btnDay');
+        if (btnMonth) btnMonth.addEventListener('click', function() { calendar.changeView('dayGridMonth'); setActiveView(this); });
+        if (btnWeek) btnWeek.addEventListener('click', function() { calendar.changeView('timeGridWeek'); setActiveView(this); });
+        if (btnDay) btnDay.addEventListener('click', function() { calendar.changeView('timeGridDay'); setActiveView(this); });
+    }
+
+    initCalendar();
+});
+</script>
+{% endblock %}
